@@ -1,0 +1,363 @@
+package futoshikipart2;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+/**
+ * @author 184752
+ * @version 1.0
+ */
+public class Futoshiki {
+
+    /**
+     * **************************************************************
+     * constant to specify DEFAULT size of puzzle
+     * **************************************************************
+     */
+    public static final int DEFAULT_GRIDSIZE = 5;
+    public int gridsize;
+    private FutoshikiSquare[][] squares;
+    private RowConstraint[][] rowConstraints;
+    private ColConstraint[][] columnConstraints;
+    private String issues = "";
+
+    /**
+     * **************************************************************
+     * Creates a completely blank puzzle of default size
+     * **************************************************************
+     */
+    public Futoshiki(int gridsize) {
+        this.gridsize = gridsize;
+        squares = new FutoshikiSquare[gridsize][gridsize];
+        for (int row = 0; row < squares.length; row++) {
+            for (int column = 0; column < squares.length; column++) {
+                squares[row][column] = new FutoshikiSquare();
+            }
+        }
+
+        rowConstraints = new RowConstraint[gridsize][gridsize - 1];
+        columnConstraints = new ColConstraint[gridsize - 1][gridsize];
+
+        //set up initial row constraints (no constraints)
+        for (int row = 0; row < gridsize; row++) {
+            for (int column = 0; column < gridsize - 1; column++) {
+                FutoshikiSquare prev, next;
+                prev = squares[row][column];
+                next = squares[row][column + 1];
+                rowConstraints[row][column] = new RowConstraint(Comparison.NONE, prev, next);
+            }
+        }
+
+        //set up initial column constraints (no constraints)
+        for (int column = 0; column < gridsize; column++) {
+            for (int row = 0; row < gridsize - 1; row++) {
+                FutoshikiSquare prev, next;
+                prev = squares[row][column];
+                next = squares[row + 1][column];
+                columnConstraints[row][column] = new ColConstraint(Comparison.NONE, prev, next);
+            }
+        }
+    }
+
+    public Futoshiki() {
+        this(DEFAULT_GRIDSIZE);
+    }
+
+    // Convenience check method
+    private boolean checkCoordinates(int row, int column) {
+        return row >= 0 && row < gridsize && column >= 0 && column < gridsize;
+    }
+
+    /**
+     * ***********************************************************
+     * sets cell at specified row and column to the value specified
+     *
+     * @param row the row number
+     * @param column the column number
+     * @param val the value to be stored
+     * ***********************************************************
+     */
+    public void setSquare(int row, int column, int val) {
+
+        if(!squares[row][column].canEdit()) {
+            System.out.println("You cannot change this square");
+        }
+        else
+        if (val >= 1 && val <= gridsize && checkCoordinates(row, column)) {
+            squares[row][column].setSquareContent(val);
+        }
+    }
+
+    public int getSquare(int row, int column) {
+        if (checkCoordinates(row, column)) {
+            return squares[row][column].getSquareContent();
+        }
+        return 0;
+    }
+
+    /**
+     * ***********************************************************
+     * sets a constraint in a specified row between the cell at the specified
+     * column and the next one
+     *
+     * @param row the row number
+     * @param col the column number
+     * @param relation the constraint (">" or "<")
+     * ***********************************************************
+     */
+    public void setRowConstraint(int row, int col, String relation) {
+        //if (relation.equals("<") || relation.equals(">")) {
+        //    rowConstraints[row][col] = relation;
+        //}
+        switch (relation) {
+            case "<":
+                rowConstraints[row][col].setComp(Comparison.LESS);
+            case ">":
+                rowConstraints[row][col].setComp(Comparison.GREATER);
+            default:
+                return;
+        }
+    }
+
+    /**
+     * ***********************************************************
+     * sets a constraint in a specified column between the cell at the specified
+     * row and the next one
+     *
+     * @param col the column number
+     * @param row the row number
+     * @param relation the constraint ("<" or ">")
+     * ***********************************************************
+     */
+    public void setColumnConstraint(int col, int row, String relation) {
+        //if (relation.equals("<") || relation.equals(">")) {
+        //    columnConstraints[col][row] = relation;
+        //}
+        switch (relation) {
+            case "v":
+                columnConstraints[row][col].setComp(Comparison.LESS);
+            case "^":
+                columnConstraints[row][col].setComp(Comparison.GREATER);
+            default:
+                return;
+        }
+    }
+
+    /**
+     * ******************************************************************
+     * Fills a Futoshiki puzzle with the randomized values and constraints. This
+     * is not guaranteed to be legal
+     *
+     * @param numValues How many values to enter
+     * @param numHorizontal How many horizontal constraints
+     * @param numVertical How many vertical constraints
+     * ******************************************************************
+     */
+    public void fillPuzzle(int numValues, int numHorizontal, int numVertical) {
+        Random rand = new Random();
+        // There is repetition of code here, but removing the repetition
+        // requires some functional manipulation which we haven't covered yet 
+        int countValues = 0;
+        while (countValues < numValues) {
+            int x = rand.nextInt(gridsize);
+            int y = rand.nextInt(gridsize);
+            if (squares[x][y].getSquareContent() == 0) {
+                squares[x][y].setSquareContent(rand.nextInt(gridsize) + 1);
+                countValues++;
+            }
+        }
+        int countHorizontal = 0;
+        while (countHorizontal < numHorizontal) {
+            int x = rand.nextInt(gridsize);
+            int y = rand.nextInt(gridsize - 1);
+            if (rowConstraints[x][y].display() == ' ') {
+                Comparison cmp = rand.nextInt(1) > 0 ? Comparison.GREATER : Comparison.LESS;
+                rowConstraints[x][y].setComp(cmp);
+                countHorizontal++;
+            }
+        }
+        int countVertical = 0;
+        while (countVertical < numVertical) {
+            int x = rand.nextInt(gridsize - 1);
+            int y = rand.nextInt(gridsize);
+            if (columnConstraints[x][y].display() == ' ') {
+                Comparison cmp = rand.nextInt(1) > 0 ? Comparison.GREATER : Comparison.LESS;
+                columnConstraints[x][y].setComp(cmp);
+                countVertical++;
+            }
+        }
+
+    }
+
+    /**
+     * ******************************************************************
+     * Returns a String in Ascii for pretty printing
+     *
+     * @return The string representing the puzzle
+     * ******************************************************************
+     */
+    public String displayString() {
+        String s = "";
+        for (int row = 0; row < gridsize - 1; row++) {
+            s += drawRow(row);
+            s += drawColumnConstraints(row);
+        }
+        s += drawRow(gridsize - 1);
+        return s;
+    }
+
+    private String printTopBottom() {
+        String s = "";
+        for (int col = 0; col < gridsize; col++) {
+            s += "---";
+            if (col < (gridsize - 1)) {
+                s += " ";
+            }
+        }
+        return s + "\n";
+    }
+
+    private String drawColumnConstraints(int row) {
+        String s = " ";
+        for (int col = 0; col < gridsize; col++) {
+            char symbol = columnConstraints[row][col].display();
+            s += symbol + " ";
+            if (col < (gridsize - 1)) {
+                s += "  ";
+            }
+        }
+        return s + "\n";
+    }
+
+    private String drawRow(int row) {
+        String s = printTopBottom();
+        for (int col = 0; col < gridsize; col++) {
+            if (squares[row][col].getSquareContent() > 0) {
+                s += "|" + squares[row][col].getSquareContent() + "|";
+            } else {
+                s += "| |";
+            }
+            if (col < gridsize - 1) {
+                s += rowConstraints[row][col].display();
+            }
+        }
+        return s + "\n" + printTopBottom();
+    }
+
+    public static void main(String[] args) {
+        Futoshiki f = new Futoshiki(6);
+        f.fillPuzzle(10, 10, 10);
+        System.out.println("Futoshiki with 10 values, row and vertical constraints");
+        System.out.print(f.displayString());
+        for (String s : f.getProblems()) {
+            System.out.println(new String(s));
+        }
+        Parser p = new Parser();
+        p.getCommand();
+    }
+
+    private int[] sortingArray(int[] tempArray) {
+        int temp;
+        for (int i = 1; i < gridsize; i++) {
+            for (int j = i; j > 0; j--) {
+                if (tempArray[j] < tempArray[j - 1]) {
+                    temp = tempArray[j];
+                    tempArray[j] = tempArray[j - 1];
+                    tempArray[j - 1] = temp;
+                }
+            }
+        }
+        return tempArray;
+    }
+
+    public boolean isLegal() {
+        return getProblems().length == 0;
+    }
+
+    private String[] getProblems() {
+        List<String> problems = new ArrayList<>();
+        problems.addAll(getExtremeValues());
+        problems.addAll(getBadConstraints());
+        problems.addAll(getDuplicateElements());
+        return problems.toArray(new String[problems.size()]);
+    }
+
+    public List<String> getBadConstraints() {
+        List<String> problems = new ArrayList<>();
+        for (int y = 0; y < this.columnConstraints.length; y++) {
+            Constraint[] columnConstraint = this.columnConstraints[y];
+            for (int x = 0; x < columnConstraint.length; x++) {
+                Constraint constraint = columnConstraint[x];
+                if (!constraint.isGoodConstraint()) {
+                    problems.add("Bad constraint in column: " + x);
+                }
+
+            }
+        }
+        return problems;
+    }
+
+    public List<String> getExtremeValues() {
+        List<String> problems = new ArrayList<>();
+
+        for (int i = 0; i < gridsize; i++) {
+            for (int j = 0; j < gridsize - 1; j++) {
+                // First checks for the following cases: 1 > X or X > gridsize and then also checks the less than versions as well
+                Constraint rowConstraint = rowConstraints[i][j];
+                if (rowConstraint.getComp() != Comparison.NONE) {
+                    if (rowConstraint.getComp() == Comparison.GREATER
+                            && (squares[i][j].getSquareContent() == 1 || squares[i][j + 1].getSquareContent() == gridsize)
+                            || rowConstraint.getComp() == Comparison.LESS
+                            && (squares[i][j].getSquareContent() == gridsize || squares[i][j + 1].getSquareContent() == 1)) {
+                        problems.add("Extreme value in row: " + i);
+                    }
+                }
+                // Same sorta thing as the rows, just with i and j swapped when indexing the 2D array of squares
+                Constraint colConstraint = columnConstraints[j][i];
+                if (colConstraint.getComp() != Comparison.NONE) {
+                    if (colConstraint.getComp() == Comparison.GREATER
+                            && (squares[j][i].getSquareContent() == 1 || squares[j + 1][i].getSquareContent() == gridsize)
+                            || colConstraint.getComp() == Comparison.LESS
+                            && (squares[j][i].getSquareContent() == gridsize || squares[j + 1][i].getSquareContent() == 1)) {
+                        problems.add("Extreme value in column: " + i);
+                    }
+                }
+            }
+        }
+        return problems;
+    }
+
+    public List<String> getDuplicateElements() {
+        List<String> problems = new ArrayList<>();
+        int[] tempRowArray = new int[gridsize];
+        int[] tempColArray = new int[gridsize];
+
+        //Puts rows and columns into the array
+        for (int l = 0; l <= gridsize - 1; l++) {
+            for (int i = 0; i <= gridsize - 1; i++) {
+                tempRowArray[i] = squares[l][i].getSquareContent();
+                tempColArray[i] = squares[i][l].getSquareContent();
+            }
+
+            //Use sortingArray 
+            tempColArray = sortingArray(tempColArray);
+            tempRowArray = sortingArray(tempRowArray);
+
+            //Checks for duplicates in row and column 
+            for (int i = 0; i <= gridsize - 2; i++) {
+                if (tempRowArray[i + 1] == tempRowArray[i]) {
+                    //foundProblem("Duplicate in row: " + l);
+                    problems.add("Duplicate in row: " + i);
+                }
+                if (tempColArray[i + 1] == tempColArray[i]) {
+                    problems.add("Duplicate in column: " + i);
+                }
+            }
+        }
+        return problems;
+    }
+}
