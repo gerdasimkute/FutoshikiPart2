@@ -1,0 +1,42 @@
+package futoshikipart2;
+
+/**
+ *
+ * @author 184752
+ */
+public abstract class Constraint {
+
+    Comparison comp;
+    final FutoshikiSquare prev, next;
+
+    public Constraint(Comparison comp, FutoshikiSquare prev, FutoshikiSquare next) {
+        this.comp = comp;
+        this.prev = prev;
+        this.next = next;
+    }
+
+    void setComp(Comparison comparison) {
+        this.comp = comparison;
+    }
+
+    boolean isGoodConstraint() {
+        switch (comp) {
+            case LESS:
+                return prev.getSquareContent() < next.getSquareContent();
+            case GREATER:
+                return prev.getSquareContent() > next.getSquareContent();
+            default:
+                return true;
+        }
+    }
+
+    public Comparison getComp() {
+        return comp;
+    }
+
+    abstract char display();
+}
+
+enum Comparison {
+    LESS, GREATER, NONE
+}
