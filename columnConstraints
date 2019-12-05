@@ -1,0 +1,24 @@
+package futoshikipart2;
+/**
+ * @author 
+ */
+
+public class ColConstraint extends Constraint {
+
+    public ColConstraint(Comparison comp, FutoshikiSquare prev, FutoshikiSquare next) {
+        super(comp, prev, next);
+    }
+
+    @Override
+    char display() {
+        switch (comp) {
+            case LESS:
+                return '^';
+            case GREATER:
+                return 'v';
+            default:
+                return ' ';
+        }
+    }
+
+}
