@@ -1,0 +1,32 @@
+package futoshikipart2;
+
+/**
+ *
+ * @author 184752
+ */
+public class FutoshikiSquare {
+
+    private int content;
+    private boolean edit;
+
+    public FutoshikiSquare() {
+        edit = true;
+    }
+
+    public boolean canEdit() {
+        return edit;
+    }
+
+    public void setEdit(boolean edit) {
+        this.edit = edit;
+    }
+
+    public int getSquareContent() {
+        return content;
+    }
+
+    public void setSquareContent(int content) {
+        this.content = content;
+
+    }
+}
