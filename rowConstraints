@@ -1,0 +1,23 @@
+package futoshikipart2;
+/**
+ * @author 184752 
+ */
+
+public class RowConstraint extends Constraint {
+
+    public RowConstraint(Comparison comp, FutoshikiSquare prev, FutoshikiSquare next) {
+        super(comp, prev, next);
+    }
+
+    @Override
+    char display() {
+        switch (comp) {
+            case LESS:
+                return '<';
+            case GREATER:
+                return '>';
+            default:
+                return ' ';
+        }
+    }
+}
